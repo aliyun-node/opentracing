@@ -111,6 +111,8 @@ app.listen(3000);
 
 等待约 1min 后，可以在控制台的相应 Tab 页看到：
 
+![慢链路追踪样例](https://github.com/aliyun-node/opentracing/blob/master/assets/20180522164039.png)
+
 ## 联系我们
 
 所有使用中遇到的问题，请咨询钉钉群：11794270。
