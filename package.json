@@ -1,0 +1,28 @@
+{
+  "name": "@alicloud/opentracing",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.alibaba-inc.com:v8/npp-opentracing.git"
+  },
+  "author": "yijun",
+  "license": "MIT",
+  "dependencies": {
+    "internal-ip": "^3.0.1",
+    "moment": "^2.22.1",
+    "opentracing": "^0.14.3"
+  },
+  "files": [
+    "lib",
+    "index.js"
+  ]
+}
