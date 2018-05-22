@@ -8,7 +8,10 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint lib test index.js --fix",
+    "test": "mocha -R spec -t 80000 test/*.js --exit",
+    "cov": "nyc -r json -r lcov -r text-summary npm test",
+    "ci": "npm run lint && npm run cov"
   },
   "repository": {
     "type": "git",
