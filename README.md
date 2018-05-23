@@ -1,10 +1,10 @@
 # Node.js 性能平台 - 慢链路追踪
-============================================
+
+[![npm version](https://badge.fury.io/js/@alicloud%2fopentracing.svg)](https://badge.fury.io/js/@alicloud%2fopentracing.svg)
+[![Build Status](https://travis-ci.org/aliyun-node/opentracing.png?branch=master)](https://travis-ci.org/aliyun-node/opentracing)
+[![codecov](https://codecov.io/gh/aliyun-node/opentracing/branch/master/graph/badge.svg)](https://codecov.io/gh/aliyun-node/opentracing)
 
 @alicloud/opentracing 是 alinode 团队开发的慢链路追踪日志输出模块，配合 [Node.js 性能平台](https://node.console.aliyun.com/) 可以展示您的 web 应用中抓取到的慢请求的产生原因。
-
-- [![Build Status](https://travis-ci.org/aliyun-node/opentracing.png?branch=master)](https://travis-ci.org/aliyun-node/opentracing)
-- [![codecov](https://codecov.io/gh/aliyun-node/opentracing/branch/master/graph/badge.svg)](https://codecov.io/gh/aliyun-node/opentracing)
 
 ## 安装
 
@@ -114,7 +114,7 @@ app.listen(3000);
 
 等待约 1min 后，可以在控制台的相应 Tab 页看到：
 
-![慢链路追踪样例](https://github.com/aliyun-node/opentracing/blob/master/assets/20180522164039.png)
+![慢链路追踪样例](https://raw.githubusercontent.com/aliyun-node/opentracing/master/assets/20180522164039.png)
 
 ## 联系我们
 
