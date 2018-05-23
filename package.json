@@ -25,7 +25,6 @@
     "opentracing": "^0.14.3"
   },
   "devDependencies": {
-    "co": "^4.6.0",
     "codecov": "^3.0.0",
     "eslint": "^4.19.1",
     "expect.js": "^0.3.1",

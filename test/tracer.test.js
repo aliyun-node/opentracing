@@ -1,5 +1,4 @@
 'use strict';
-const co = require('co');
 const fs = require('fs');
 const mm = require('mm');
 const IncomingMessage = require('http').IncomingMessage;
@@ -129,7 +128,7 @@ describe('tracer & span', function () {
     expect(span.context().operationName).to.be('test-span-reset-name');
   });
 
-  it('span.finish create tracing log should ok with request', co.wrap(function* () {
+  it('span.finish create tracing log should ok with request', async function () {
     let tracer = new Tracer('Test');
     let request = new IncomingMessage();
     // root span
@@ -138,19 +137,19 @@ describe('tracer & span', function () {
     // child span1
     let span1 = tracer.startSpan('test-span-1', { childOf: parent });
     span1.log({ status: 'span1' });
-    yield delay(0.5);
+    await delay(0.5);
     span1.finish(request);
     // child span2
     let span2 = tracer.startSpan('test-span-2', { childOf: parent });
     span2.log({ status: 'span2' });
-    yield delay(0.5);
+    await delay(0.5);
     span2.finish(request);
     // repeat finish will be ignore
     span2.finish(request);
     // root span finish
     parent.finish(request);
     // wait append to logfile
-    try { yield onMessage(tracer); }
+    try { await onMessage(tracer); }
     catch (e) { expect(e).to.not.be.ok(); }
 
     // check if tracing log file exists
@@ -162,9 +161,9 @@ describe('tracer & span', function () {
     expect(content.length).to.be(3);
     // delete log file
     fs.unlink(logfile, noop);
-  }));
+  });
 
-  it('span.finish create tracing log should ok with no request', co.wrap(function* () {
+  it('span.finish create tracing log should ok with no request', async function () {
     let tracer = new Tracer('Test');
     // root span
     let parent = tracer.startSpan('test-span-parent');
@@ -172,17 +171,17 @@ describe('tracer & span', function () {
     // child span1
     let span1 = tracer.startSpan('test-span-1', { childOf: parent });
     span1.log({ status: 'span1' });
-    yield delay(0.5);
+    await delay(0.5);
     span1.finish();
     // child span2
     let span2 = tracer.startSpan('test-span-2', { childOf: parent });
     span2.log({ status: 'span2' });
-    yield delay(0.5);
+    await delay(0.5);
     span2.finish();
     // root span finish
     parent.finish();
     // wait append to logfile
-    try { yield onMessage(tracer); }
+    try { await onMessage(tracer); }
     catch (e) { expect(e).to.not.be.ok(); }
 
     // check if tracing log file exists
@@ -195,9 +194,9 @@ describe('tracer & span', function () {
     expect(content.length).to.be(3);
     // delete log file
     fs.unlink(logfile, noop);
-  }));
+  });
 
-  it('log file > limit should give warn message', co.wrap(function* () {
+  it('log file > limit should give warn message', async function () {
     let tracer = new Tracer('Test', { limit: 10, interval: 1000 });
     let parent = tracer.startSpan('test-span-parent');
     for (let i = 0; i < 20; i++) {
@@ -207,7 +206,7 @@ describe('tracer & span', function () {
     }
     parent.finish();
     // wait append to logfile
-    try { yield onMessage(tracer); }
+    try { await onMessage(tracer); }
     catch (e) { expect(e).to.not.be.ok(); }
 
     // do check
@@ -220,20 +219,20 @@ describe('tracer & span', function () {
     expect(content.length).to.be(10);
     // delete log file
     fs.unlink(logfile, noop);
-  }));
+  });
 
-  it('clear restrict shoud ok', co.wrap(function* () {
+  it('clear restrict shoud ok', async function () {
     let tracer = new Tracer('Test', { limit: 5, interval: 50 });
     let parent = tracer.startSpan('test-span-parent');
     for (let i = 0; i < 10; i++) {
       let span = tracer.startSpan('test-span-1', { childOf: parent });
       span.log({ status: 'span1' });
-      yield delay(0.05, 0.06);
+      await delay(0.05, 0.06);
       span.finish();
     }
     parent.finish();
     // wait append to logfile
-    try { yield onMessage(tracer); }
+    try { await onMessage(tracer); }
     catch (e) { expect(e).to.not.be.ok(); }
 
     // do check
@@ -246,9 +245,9 @@ describe('tracer & span', function () {
     expect(content.length).to.be(11);
     // delete log file
     fs.unlink(logfile, noop);
-  }));
+  });
 
-  it('append file throw error', co.wrap(function* () {
+  it('append file throw error', async function () {
     mm(fs, 'appendFile', function (file, content, cb) {
       expect(file).to.be(logfile);
       expect(content).to.be.ok();
@@ -258,10 +257,10 @@ describe('tracer & span', function () {
     let span = tracer.startSpan('test-span-parent');
     span.log({ status: 'root' });
     span.finish();
-    try { yield onMessage(tracer); }
+    try { await onMessage(tracer); }
     catch (e) { expect(e).to.be('mock append file error'); }
     mm.restore();
-  }));
+  });
 
   it('should ok with default log dir', function () {
     mm(process.env, 'NODE_LOG_DIR', '');
