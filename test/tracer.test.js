@@ -31,6 +31,9 @@ const unlinkLogFile = function (logfile) {
 
 describe('tracer & span', function () {
   before(function () {
+    if (!fs.existsSync(process.env.NODE_LOG_DIR)) {
+      fs.mkdirSync(process.env.NODE_LOG_DIR);
+    }
     unlinkLogFile(logfile);
     mm(Footprint.prototype, 'log', function (data) {
       fs.appendFileSync(logfile, Buffer.from(data + os.EOL));
@@ -39,6 +42,7 @@ describe('tracer & span', function () {
 
   after(function () {
     unlinkLogFile(logfile);
+    fs.rmdirSync(process.env.NODE_LOG_DIR);
     mm.restore();
   });
 
