@@ -21,11 +21,53 @@ const delay = function (time, ext) {
 };
 // noop callback
 const noop = function () { };
+// noop logger
+const noopLogger = { info: noop, warn: noop, log: noop, error: noop };
 // get log file
 const logfile = new FileSender({ logger: console, options: { limit: 10 } }).getTraingLogFile();
+// delete logfile
 const unlinkLogFile = function (logfile) {
   if (fs.existsSync(logfile)) {
     fs.unlink(logfile, noop);
+  }
+};
+// apdex test
+const loggerWithRequest = async function (apdex, duration, file) {
+  unlinkLogFile(logfile);
+  let tracer = new Tracer('Test', { apdex });
+  let request = new IncomingMessage();
+  // root span
+  let parent = tracer.startSpan('test-span-parent');
+  parent.log({ status: 'root' });
+  // child span1
+  let span1 = tracer.startSpan('test-span-1', { childOf: parent });
+  span1.log({ status: 'span1' });
+  await delay(0.05, duration);
+  span1.finish(request);
+  // child span2
+  let span2 = tracer.startSpan('test-span-2', { childOf: parent });
+  span2.log({ status: 'span2' });
+  await delay(0.05, duration);
+  span2.finish(request);
+  // repeat child span finish will be ignore
+  span2.finish(request);
+  // root span finish
+  parent.finish(request);
+  // repeat parent span finish will be ignore
+  parent.finish(request);
+
+  // check if tracing log file exists
+  if (file) {
+    expect(fs.existsSync(logfile)).to.be.ok();
+    let content = fs.readFileSync(logfile, 'utf8').toString();
+    try { content = JSON.parse(content); }
+    catch (e) { expect(e).to.not.be.ok(); }
+    expect(Array.isArray(content)).to.be.ok();
+    expect(content.length).to.be(3);
+    // delete log file
+    fs.unlink(logfile, noop);
+  } else {
+    expect(fs.existsSync(logfile)).not.to.be.ok();
   }
 };
 
@@ -138,56 +180,37 @@ describe('tracer & span', function () {
     expect(span.context().operationName).to.be('test-span-reset-name');
   });
 
-  it('span.finish create tracing log should ok with request', async function () {
-    unlinkLogFile(logfile);
-    let tracer = new Tracer('Test');
-    let request = new IncomingMessage();
-    // root span
-    let parent = tracer.startSpan('test-span-parent');
-    parent.log({ status: 'root' });
-    // child span1
-    let span1 = tracer.startSpan('test-span-1', { childOf: parent });
-    span1.log({ status: 'span1' });
-    await delay(0.5);
-    span1.finish(request);
-    // child span2
-    let span2 = tracer.startSpan('test-span-2', { childOf: parent });
-    span2.log({ status: 'span2' });
-    await delay(0.5);
-    span2.finish(request);
-    // repeat child span finish will be ignore
-    span2.finish(request);
-    // root span finish
-    parent.finish(request);
-    // repeat parent span finish will be ignore
-    parent.finish(request);
+  it('span.finish create tracing log should ok with request: apdex is NaN', async function () {
+    await loggerWithRequest('abc', 0.21, true);
+  });
 
-    // check if tracing log file exists
-    expect(fs.existsSync(logfile)).to.be.ok();
-    let content = fs.readFileSync(logfile, 'utf8').toString();
-    try { content = JSON.parse(content); }
-    catch (e) { expect(e).to.not.be.ok(); }
-    expect(Array.isArray(content)).to.be.ok();
-    expect(content.length).to.be(3);
-    // delete log file
-    fs.unlink(logfile, noop);
+  it('span.finish create tracing log should ok with request: apdex < 100', async function () {
+    await loggerWithRequest(1, 0.21, true);
+  });
+
+  it('span.finish create tracing log should ok with request: apdex > 100', async function () {
+    await loggerWithRequest(101, 0.23, true);
+  });
+
+  it('span.finish create tracing log should ok with request: total time < 4 * apdex', async function () {
+    await loggerWithRequest(100, 0.05, false);
   });
 
   it('span.finish create tracing log should ok with no request', async function () {
     unlinkLogFile(logfile);
-    let tracer = new Tracer('Test');
+    let tracer = new Tracer('Test', { logger: noopLogger });
     // root span
     let parent = tracer.startSpan('test-span-parent');
     parent.log({ status: 'root' });
     // child span1
     let span1 = tracer.startSpan('test-span-1', { childOf: parent });
     span1.log({ status: 'span1' });
-    await delay(0.5);
+    await delay(0.1);
     span1.finish();
     // child span2
     let span2 = tracer.startSpan('test-span-2', { childOf: parent });
     span2.log({ status: 'span2' });
-    await delay(0.5);
+    await delay(0.1);
     span2.finish();
     // root span finish
     parent.finish();
@@ -206,7 +229,7 @@ describe('tracer & span', function () {
 
   it('log file > limit should give warn message', async function () {
     unlinkLogFile(logfile);
-    let tracer = new Tracer('Test', { limit: 10, interval: 1000 });
+    let tracer = new Tracer('Test', { limit: 10, interval: 1000, logger: noopLogger });
     let parent = tracer.startSpan('test-span-parent');
     for (let i = 0; i < 20; i++) {
       let span = tracer.startSpan('test-span-1', { childOf: parent });
@@ -229,7 +252,7 @@ describe('tracer & span', function () {
 
   it('clear restrict shoud ok', async function () {
     unlinkLogFile(logfile);
-    let tracer = new Tracer('Test', { limit: 5, interval: 50 });
+    let tracer = new Tracer('Test', { limit: 5, interval: 50, logger: noopLogger });
     let parent = tracer.startSpan('test-span-parent');
     for (let i = 0; i < 10; i++) {
       let span = tracer.startSpan('test-span-1', { childOf: parent });
@@ -257,7 +280,7 @@ describe('tracer & span', function () {
       expect(content).to.be.ok();
       setImmediate(() => cb('mock append file error'));
     });
-    let tracer = new Tracer('Test', { logger: { error: noop } });
+    let tracer = new Tracer('Test', { logger: noopLogger });
     let span = tracer.startSpan('test-span-parent1');
     span.log({ status: 'root' });
     span.finish();
