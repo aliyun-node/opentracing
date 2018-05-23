@@ -18,6 +18,7 @@ describe('id generator', function () {
   it('get hex pid should ok', function () {
     expect(IdGenerator.getHexPid(-1)).to.be('0000');
     expect(IdGenerator.getHexPid(10)).to.be('000a');
+    expect(IdGenerator.getHexPid(65536)).to.be('15a0');
   });
 
   it('generate should ok', function () {

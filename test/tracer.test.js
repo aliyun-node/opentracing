@@ -28,12 +28,15 @@ const onMessage = function (tracer) {
     tracer.once('append error', reject);
   });
 };
+const unlinkLogFile = function (logfile) {
+  if (fs.existsSync(logfile)) {
+    fs.unlink(logfile, noop);
+  }
+};
 
 describe('tracer & span', function () {
   before(function () {
-    if (fs.existsSync(logfile)) {
-      fs.unlink(logfile, noop);
-    }
+    unlinkLogFile(logfile);
   });
 
   it('tracer should ok with error param', function () {
@@ -129,6 +132,7 @@ describe('tracer & span', function () {
   });
 
   it('span.finish create tracing log should ok with request', async function () {
+    unlinkLogFile(logfile);
     let tracer = new Tracer('Test');
     let request = new IncomingMessage();
     // root span
@@ -144,9 +148,11 @@ describe('tracer & span', function () {
     span2.log({ status: 'span2' });
     await delay(0.5);
     span2.finish(request);
-    // repeat finish will be ignore
+    // repeat child span finish will be ignore
     span2.finish(request);
     // root span finish
+    parent.finish(request);
+    // repeat parent span finish will be ignore
     parent.finish(request);
     // wait append to logfile
     try { await onMessage(tracer); }
@@ -164,6 +170,7 @@ describe('tracer & span', function () {
   });
 
   it('span.finish create tracing log should ok with no request', async function () {
+    unlinkLogFile(logfile);
     let tracer = new Tracer('Test');
     // root span
     let parent = tracer.startSpan('test-span-parent');
@@ -197,6 +204,7 @@ describe('tracer & span', function () {
   });
 
   it('log file > limit should give warn message', async function () {
+    unlinkLogFile(logfile);
     let tracer = new Tracer('Test', { limit: 10, interval: 1000 });
     let parent = tracer.startSpan('test-span-parent');
     for (let i = 0; i < 20; i++) {
@@ -222,6 +230,7 @@ describe('tracer & span', function () {
   });
 
   it('clear restrict shoud ok', async function () {
+    unlinkLogFile(logfile);
     let tracer = new Tracer('Test', { limit: 5, interval: 50 });
     let parent = tracer.startSpan('test-span-parent');
     for (let i = 0; i < 10; i++) {
