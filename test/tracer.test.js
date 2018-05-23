@@ -1,7 +1,9 @@
 'use strict';
+const os = require('os');
 const fs = require('fs');
 const mm = require('mm');
 const IncomingMessage = require('http').IncomingMessage;
+const Footprint = require('footprint');
 const path = require('path');
 const expect = require('expect.js');
 const opentracing = require('..');
@@ -21,13 +23,6 @@ const delay = function (time, ext) {
 const noop = function () { };
 // get log file
 const logfile = new FileSender({ logger: console, options: { limit: 10 } }).getTraingLogFile();
-// on append file
-const onMessage = function (tracer) {
-  return new Promise((resolve, reject) => {
-    tracer.once('append success', resolve);
-    tracer.once('append error', reject);
-  });
-};
 const unlinkLogFile = function (logfile) {
   if (fs.existsSync(logfile)) {
     fs.unlink(logfile, noop);
@@ -37,6 +32,14 @@ const unlinkLogFile = function (logfile) {
 describe('tracer & span', function () {
   before(function () {
     unlinkLogFile(logfile);
+    mm(Footprint.prototype, 'log', function (data) {
+      fs.appendFileSync(logfile, Buffer.from(data + os.EOL));
+    });
+  });
+
+  after(function () {
+    unlinkLogFile(logfile);
+    mm.restore();
   });
 
   it('tracer should ok with error param', function () {
@@ -154,9 +157,6 @@ describe('tracer & span', function () {
     parent.finish(request);
     // repeat parent span finish will be ignore
     parent.finish(request);
-    // wait append to logfile
-    try { await onMessage(tracer); }
-    catch (e) { expect(e).to.not.be.ok(); }
 
     // check if tracing log file exists
     expect(fs.existsSync(logfile)).to.be.ok();
@@ -187,9 +187,6 @@ describe('tracer & span', function () {
     span2.finish();
     // root span finish
     parent.finish();
-    // wait append to logfile
-    try { await onMessage(tracer); }
-    catch (e) { expect(e).to.not.be.ok(); }
 
     // check if tracing log file exists
     expect(fs.existsSync(logfile)).to.be.ok();
@@ -213,9 +210,6 @@ describe('tracer & span', function () {
       span.finish();
     }
     parent.finish();
-    // wait append to logfile
-    try { await onMessage(tracer); }
-    catch (e) { expect(e).to.not.be.ok(); }
 
     // do check
     expect(fs.existsSync(logfile)).to.be.ok();
@@ -240,9 +234,6 @@ describe('tracer & span', function () {
       span.finish();
     }
     parent.finish();
-    // wait append to logfile
-    try { await onMessage(tracer); }
-    catch (e) { expect(e).to.not.be.ok(); }
 
     // do check
     expect(fs.existsSync(logfile)).to.be.ok();
@@ -263,11 +254,10 @@ describe('tracer & span', function () {
       setImmediate(() => cb('mock append file error'));
     });
     let tracer = new Tracer('Test', { logger: { error: noop } });
-    let span = tracer.startSpan('test-span-parent');
+    let span = tracer.startSpan('test-span-parent1');
     span.log({ status: 'root' });
     span.finish();
-    try { await onMessage(tracer); }
-    catch (e) { expect(e).to.be('mock append file error'); }
+    unlinkLogFile(logfile);
     mm.restore();
   });
 
