@@ -3,6 +3,9 @@
 
 @alicloud/opentracing 是 alinode 团队开发的慢链路追踪日志输出模块，配合 [Node.js 性能平台](https://node.console.aliyun.com/) 可以展示您的 web 应用中抓取到的慢请求的产生原因。
 
+- [![Build Status](https://travis-ci.org/aliyun-node/opentracing.png?branch=master)](https://travis-ci.org/aliyun-node/opentracing)
+- [![codecov](https://codecov.io/gh/aliyun-node/opentracing/branch/master/graph/badge.svg)](https://codecov.io/gh/aliyun-node/opentracing)
+
 ## 安装
 
 ```sh

@@ -9,9 +9,9 @@
   },
   "scripts": {
     "lint": "eslint lib test index.js --fix",
-    "test": "mocha -R spec -t 80000 test/*.js --exit",
-    "cov": "nyc -r json -r lcov -r text-summary npm test",
-    "ci": "npm run lint && npm run cov"
+    "test": "mocha -R spec test/**/*.test.js",
+    "cov": "nyc --reporter=html --reporter=text --reporter=lcov mocha -t 3000 -R spec test/**/*.test.js",
+    "ci": "npm run lint && npm run cov && codecov"
   },
   "repository": {
     "type": "git",
