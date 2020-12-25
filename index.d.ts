@@ -29,7 +29,7 @@ export class Tracer extends EventEmitter {
      * @param option  可选参数
      * @param reporter 自定义发送方法，需要实现 report 方法，入参为 span
      */
-    constructor(serviceName: string, option?: TracerOption, reporter?: any)
+    constructor(serviceName: string, option?: TracerOption, reporter?: Reporter)
 
     startSpan(spanName: string, option?: StartSpanOption): Span
 
@@ -88,3 +88,22 @@ export class Span {
 
     finish(req: IncomingMessage)
 }
+
+export class FileSender {
+    constructor(tracer: Tracer)
+
+    append(spanContext: string)
+
+    getTraingLogFile()
+}
+
+export interface Reporter {
+    report(span: Span)
+}
+
+export class RemoteReporter implements Reporter {
+    constructor(tracer: Tracer, sender?: FileSender)
+
+    report(span: Span)
+}
+
