@@ -13,6 +13,7 @@
     "cov": "nyc --reporter=html --reporter=text --reporter=lcov mocha -t 3000 -R spec test/**/*.test.js",
     "ci": "npm run lint && npm run cov && codecov"
   },
+  "typings": "./index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aliyun-node/optracing.git"
@@ -26,6 +27,7 @@
     "opentracing": "^0.14.3"
   },
   "devDependencies": {
+    "@types/node": "^14.14.16",
     "codecov": "^3.0.0",
     "eslint": "^4.19.1",
     "expect.js": "^0.3.1",
